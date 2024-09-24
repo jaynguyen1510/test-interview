@@ -1,25 +1,66 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import ArticleList from "./components/ArticleList";
+import AddArticleForm from "./components/AddArticleForm";
 
-function App() {
+const App = () => {
+  const [articles, setArticles] = useState([]);
+
+  const fetchArticles = async () => {
+    const storedArticles = JSON.parse(localStorage.getItem("articles")) || [];
+    return new Promise((resolve) => {
+      setTimeout(
+        () => resolve(storedArticles),
+        Math.random() * (1000 - 200) + 200
+      );
+    });
+  };
+
+  const saveArticles = async (articles) => {
+    localStorage.setItem("articles", JSON.stringify(articles));
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(), Math.random() * (1000 - 200) + 200);
+    });
+  };
+
+  useEffect(() => {
+    const loadArticles = async () => {
+      const data = await fetchArticles();
+      setArticles(data);
+    };
+    loadArticles();
+  }, []);
+
+  const handleAddArticle = async (newArticle) => {
+    const updatedArticles = [...articles, newArticle];
+    await saveArticles(updatedArticles);
+    setArticles(updatedArticles);
+  };
+
+  const handleUpdateArticle = async (updatedArticle) => {
+    const updatedArticles = articles.map((article) =>
+      article.id === updatedArticle.id ? updatedArticle : article
+    );
+    await saveArticles(updatedArticles);
+    setArticles(updatedArticles);
+  };
+
+  const handleDeleteArticle = async (id) => {
+    const updatedArticles = articles.filter((article) => article.id !== id);
+    await saveArticles(updatedArticles);
+    setArticles(updatedArticles);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Article Management</h1>
+      <AddArticleForm onAddArticle={handleAddArticle} />
+      <ArticleList
+        articles={articles}
+        onUpdateArticle={handleUpdateArticle}
+        onDeleteArticle={handleDeleteArticle}
+      />
     </div>
   );
-}
+};
 
 export default App;
